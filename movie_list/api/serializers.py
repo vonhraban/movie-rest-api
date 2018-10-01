@@ -18,5 +18,5 @@ class BucketSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class to map serializer's fields with the model fields."""
         model = Bucket
-        fields = ('id', 'name', 'date_created', 'date_modified')
+        fields = ('id', 'name', 'movies', 'date_created', 'date_modified')
         read_only_fields = ('date_created', 'date_modified')

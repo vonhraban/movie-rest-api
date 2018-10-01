@@ -2,7 +2,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
 from django.urls import reverse
-from ..models import Bucket
+from ..models import Bucket, Movie
 from dateutil import parser
 
 
@@ -83,3 +83,43 @@ class ViewTestCase(TestCase):
             reverse('bucket.details', kwargs={'pk': 999}),
             format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_can_add_modify_delete_movies(self):
+        # Create two movies first
+        movie_one = Movie.objects.create(name='Breaking The Waves')
+        movie_two = Movie.objects.create(name='Manderlay')
+
+        # Add a bucket
+        bucket = Bucket.objects.create(name='To Watch')
+
+        # Add movies to bucket
+        bucket.movies.add(movie_one)
+        bucket.movies.add(movie_two)
+        bucket.save()
+
+        # Retrieve and make sure movies are in the bucket
+        stored_bucket = Bucket.objects.get(id=bucket.id)
+        related_movies = stored_bucket.movies.all()
+        self.assertIn(movie_one, related_movies)
+        self.assertIn(movie_two, related_movies)
+
+        # Remove just one movie
+        stored_bucket.movies.remove(movie_one)
+        stored_bucket = Bucket.objects.get(id=stored_bucket.id)
+        related_movies = stored_bucket.movies.all()
+        self.assertNotIn(movie_one, related_movies)
+        self.assertIn(movie_two, related_movies)
+
+        # Clear the bucket
+        stored_bucket.movies.clear()
+        stored_bucket = Bucket.objects.get(id=stored_bucket.id)
+        related_movies = stored_bucket.movies.all()
+        self.assertEquals(related_movies.count(), 0)
+
+        # Assign a list of movies to the bucke3t
+        stored_bucket.movies.set([movie_one, movie_two])
+        stored_bucket = Bucket.objects.get(id=stored_bucket.id)
+        related_movies = stored_bucket.movies.all()
+        self.assertIn(movie_one, related_movies)
+        self.assertIn(movie_two, related_movies)
+
